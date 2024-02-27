@@ -34,10 +34,21 @@ app.get("/" ,(req, res) => {
     res.send("Hi I am root");
 });
 
+const validateListing = (req,res,next)=>{
+    let { error }= listingSchema.validate(req.body);
+    if(error){
+        let errMsg = error.details.map((el)=> el.message).join(",");
+        throw new ExpressError(400,errMsg);
+    }
+    else{
+        next();
+    }
+}
+
 //Index Route
 app.get("/listings", wrapAsync(async (req, res) => {
     const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
+    res.render("./listings/index.ejs", { allListings });
 }));
 
 //New Route
@@ -53,7 +64,8 @@ app.get("/listings/:id",wrapAsync(async (req,res) => {
 }));
 
 //Create Route
-app.post("/listings", wrapAsync(async (req , res, next) => {
+app.post("/listings", validateListing, wrapAsync(async (req , res, next) => {
+    //let {title , description, price ,image ,location,country}= req.body;
     let result = listingSchema.validate(req.body);
     console.log(result);
     if(result.error){
