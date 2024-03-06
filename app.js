@@ -32,6 +32,7 @@ app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
 
+
 app.get("/" ,(req, res) => {
   res.send("Hi I am root");
 });
@@ -115,7 +116,7 @@ app.delete("/listings/:id", wrapAsync(async (req, res) =>{
 );
 
 //Reviews
-//Post Route
+//Post Review Route
 app.post("/listings/:id/reviews", 
  validateReview ,
  wrapAsync(async(req, res)=> {
@@ -131,6 +132,19 @@ app.post("/listings/:id/reviews",
  })
 );
 
+//Delete  Review Route
+app.delete("/listings/:id/reviews/:reviewId",
+  wrapAsync(async(req,res) =>{
+   let{id, reviewId} = req.params;
+
+   await Listing.findByIdAndUpdate(id, {$pull: {reviews: reviewId}});
+   await Review.findByIdAndDelete(reviewId);
+
+   res.redirect(`/listings/${id}`);
+ })
+);
+
+
 app.all("*", (req, res, next) => {
     next(new ExpressError(404,"Page Not Found!"));
 });
@@ -139,11 +153,6 @@ app.use((err, req, res, next) => {
     let { statusCode = 500 , message ="Something went Wrong!"} = err;
     res.status(statusCode).render("error.ejs" ,{message});
     //res.status(statusCode).send(message);
-});
-
-app.listen(8080, () => {
-    console.log("server is listening to port 8080");
-});
 });
 
 app.listen(8080, () => {
